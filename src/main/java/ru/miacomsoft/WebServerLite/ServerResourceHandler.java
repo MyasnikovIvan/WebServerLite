@@ -64,33 +64,15 @@ public class ServerResourceHandler implements Runnable {
      */
     private boolean readRequestHeader() throws IOException {
         int charInt;
-        StringBuffer sb = new StringBuffer();
         StringBuffer sbTmp = new StringBuffer();
         // читаем заголовок HTML запроса
-        while (query.socket.isConnected() && (charInt = query.inputStreamReader.read()) > 0) {
-            if (query.socket.isConnected() == false) return false;
-            sbTmp.append((char) charInt);
-            if ((sbTmp.toString().indexOf("\r") != -1) || (sbTmp.toString().indexOf("\n") != -1) || (charInt == 0)) {
-                if (sbTmp.toString().length() == 2) {
-                    break; // чтение заголовка окончено
-                }
-                sbTmp.setLength(0);
-            }
-            sb.append((char) charInt);
-            if (sb.toString().length() > 4) { // не удачная конструкция, надо подумать о корректировки механизма поиска окончания запроса
-                if ((sb.toString().indexOf("\r\n\r\n") != -1)
-                        || (sb.toString().indexOf("\r\r") != -1)
-                        || (sb.toString().indexOf("\n\n") != -1)
-                ) {
-                    break; // чтение заголовка окончено
-                }
-            }
-        }
+        Scanner scanner = new Scanner(query. socket.getInputStream(), "UTF-8");
+        String sb = scanner.useDelimiter("\\r\\n\\r\\n").next();
         query.typeQuery = "GET";
-        query.HeadSrc = sb;
-        if (sb.toString().indexOf("Content-Length: ") != -1) {
+        query.HeadSrc =  new StringBuffer(sb);
+        if (sb.indexOf("Content-Length: ") != -1) {
             // Читаем тело POST запроса
-            String sbTmp2 = sb.toString().substring(sb.toString().indexOf("Content-Length: ") + "Content-Length: ".length(), sb.toString().length());
+            String sbTmp2 = sb.substring(sb.indexOf("Content-Length: ") + "Content-Length: ".length(), sb.length());
             String lengPostStr = sbTmp2.substring(0, sbTmp2.indexOf("\n")).replace("\r", "");
             int LengPOstBody = Integer.valueOf(lengPostStr);
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
